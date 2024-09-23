@@ -68,6 +68,7 @@ public class CardboardStartup : MonoBehaviour
         }
 
 #if !UNITY_EDITOR
+        // Actualizar los parámetros de la pantalla para ajustarse a la nueva configuración
         Api.UpdateScreenParams();
 #endif
     }

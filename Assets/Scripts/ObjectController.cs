@@ -86,6 +86,7 @@ public class ObjectController : MonoBehaviour
     /// </summary>
     public void OnPointerEnter()
     {
+        Debug.Log("on point enter ---- ");
         SetMaterial(true);
     }
 
@@ -94,7 +95,7 @@ public class ObjectController : MonoBehaviour
     /// </summary>
     public void OnPointerExit()
     {
-         Debug.Log("on point exit pasoooo ?? ");
+        Debug.Log("on point exit  -----");
         SetMaterial(false);
     }
 
@@ -104,6 +105,7 @@ public class ObjectController : MonoBehaviour
     /// </summary>
     public void OnPointerClick()
     {
+        Debug.Log("on point click ---- ");
         TeleportRandomly();
     }
 

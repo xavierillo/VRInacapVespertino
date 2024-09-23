@@ -27,16 +27,16 @@ using UnityEngine.EventSystems;
 /// </remarks>
 public class CardboardLookReticlePointer : MonoBehaviour
 {
-    [SerializeField] private GameObject pointer;
-    [SerializeField] private float maxDistancePointer = 4.5f;
+    [SerializeField]
+    private GameObject pointer;
     [Range(0,1)]
-    [SerializeField] private float disPointerObjet = 0.95f;
+    [SerializeField]
+    private float disPointerObjet = 0.95f;
+    [SerializeField]
+    private string interactableTag = "Interactable";
 
-    private const float _maxDistance = 10;
-
-    private readonly string interactableTag = "Interactable";
     private float scaleSize = 0.025f;
-    
+
     /// <summary>
     /// Sorting order to use for the reticle's renderer.
     /// </summary>
@@ -89,7 +89,7 @@ public class CardboardLookReticlePointer : MonoBehaviour
     /// <summary>
     /// Maximum distance between the camera and the reticle (in meters).
     /// </summary>
-    private const float _RETICLE_MAX_DISTANCE = 20.0f;
+    public const float _RETICLE_MAX_DISTANCE = 20.0f;
 
     /// <summary>
     /// Number of segments making the reticle circle.
@@ -148,13 +148,13 @@ public class CardboardLookReticlePointer : MonoBehaviour
 
         CreateMesh();
 
-         GazeManager.Instance.OnGazeSelection += GazeSelection;
+        GazeManager.Instance.OnGazeSelection += GazeSelection;
     }
 
 
     private void GazeSelection()
     {
-        _gazedAtObject?.SendMessage("OnPointerClick");
+        _gazedAtObject?.SendMessage("OnPointerClick", SendMessageOptions.DontRequireReceiver);
     }
 
     /// <summary>
@@ -162,84 +162,59 @@ public class CardboardLookReticlePointer : MonoBehaviour
     /// </summary>
     private void Update()
     {
-        // Casts ray towards camera's forward direction, to detect if a GameObject is being gazed
-        // at.
         RaycastHit hit;
-
-         /*float maxDistance = 20f;
         Ray ray = new Ray(transform.position, transform.forward);
-        Debug.DrawRay(ray.origin, ray.direction * maxDistance, Color.green); //crea el rayo
-
-        if (Physics.Raycast(transform.position, transform.forward, out hit, maxDistance, whatToDetect))
-        {
-            Debug.Log("Distancia: "+ hit.distance);
-            Debug.Log("Punto de impacto" + hit.point);
-            hit.transform.gameObject.GetComponent<MeshRenderer>().material.color = Color.red;
-
-        }*/
-
+        Debug.DrawRay(ray.origin, ray.direction * _RETICLE_MAX_DISTANCE, Color.green); //crea el rayo
 
         if (Physics.Raycast(transform.position, transform.forward, out hit, _RETICLE_MAX_DISTANCE))
         {
-            // GameObject detected in front of the camera.
-            if (_gazedAtObject != hit.transform.gameObject)
+            GameObject hitObject = hit.transform.gameObject;
+
+            if (_gazedAtObject != hitObject)
             {
-                // New GameObject.
                 if (IsInteractive(_gazedAtObject))
                 {
-                    _gazedAtObject?.SendMessage("OnPointerExit");
-                    //PointerOutGace();
+                    _gazedAtObject?.SendMessage("OnPointerExit", SendMessageOptions.DontRequireReceiver);
                 }
 
-                _gazedAtObject = hit.transform.gameObject;
+                _gazedAtObject = hitObject;
 
                 if (IsInteractive(_gazedAtObject))
                 {
-                    //PointerOnGace(hit.point);
-                    _gazedAtObject.SendMessage("OnPointerEnter");
+                    _gazedAtObject.SendMessage("OnPointerEnter", SendMessageOptions.DontRequireReceiver);
+                    GazeManager.Instance?.StartGazeSelection();  // Verificación añadida aquí
                 }
-
-                //aqui nuevo algo
-                GazeManager.Instance.StartGazeSelection();
             }
 
-            /*
-            if(IsInteractive(_gazedAtObject) && _gazedAtObject != null) {
-                PointerOnGace(hit.point);
-            } else {
-                PointerOutGace();
-            }
-            */
-            if (hit.transform.CompareTag(interactableTag))
+            if (hitObject.CompareTag(interactableTag))
             {
+                Debug.DrawRay(ray.origin, ray.direction * _RETICLE_MAX_DISTANCE, Color.red);
                 PointerOnGace(hit.point);
-                 ResetParams();
-            } else {
-                PointerOutGace();
-                SetParams(hit.distance, IsInteractive(_gazedAtObject));
+                ResetParams();
             }
-
-            //SetParams(hit.distance, IsInteractive(_gazedAtObject));
+            else
+            {
+                PointerOutGace();
+                SetParams(hit.distance, IsInteractive(hitObject));
+            }
         }
         else
         {
-            // No GameObject detected in front of the camera.
             if (IsInteractive(_gazedAtObject))
             {
-                _gazedAtObject?.SendMessage("OnPointerExit");
+                _gazedAtObject?.SendMessage("OnPointerExit", SendMessageOptions.DontRequireReceiver);
                 PointerOutGace();
             }
 
             _gazedAtObject = null;
             ResetParams();
         }
-
         // Checks for screen touches.
         if (Google.XR.Cardboard.Api.IsTriggerPressed)
         {
             if (IsInteractive(_gazedAtObject))
             {
-                _gazedAtObject?.SendMessage("OnPointerClick");
+                _gazedAtObject?.SendMessage("OnPointerClick", SendMessageOptions.DontRequireReceiver);
             }
         }
 
@@ -387,25 +362,19 @@ public class CardboardLookReticlePointer : MonoBehaviour
         pointer.transform.localScale = Vector3.one * scaleFactor;
         pointer.transform.parent.position = CalculatePointerPosition(transform.position, hitPoint, disPointerObjet);
 
-        if (!pointer.activeSelf)
-        {
-            pointer.SetActive(true); // Asegúrate de que el puntero esté activo al mirar
+        if (!pointer.activeSelf){
+            pointer.SetActive(true); // Solo lo activas si está desactivado
         }
     }
 
-    private void PointerOutGace() {
-        pointer.transform.localScale = Vector3.one * 0.1f;
-        pointer.transform.parent.transform.localPosition = new Vector3(0, 0, maxDistancePointer);
-        pointer.transform.parent.parent.transform.rotation = transform.rotation;
-
-        if (pointer.activeSelf)
-        {
-            pointer.SetActive(false); // Desactiva el puntero cuando no estás mirando
+    private void PointerOutGace()
+    {
+        if (pointer.activeSelf) {
+            pointer.SetActive(false); // Solo lo desactivas si está activado
         }
 
-        GazeManager.Instance.CancelGazeSelection();
+        GazeManager.Instance?.CancelGazeSelection();  // Verificación añadida aquí
     }
-
     private Vector3 CalculatePointerPosition(Vector3 p0, Vector3 p1, float t)
     {
         float x = p0.x + t * (p1.x - p0.x);
