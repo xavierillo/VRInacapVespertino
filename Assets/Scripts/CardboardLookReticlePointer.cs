@@ -163,6 +163,7 @@ public class CardboardLookReticlePointer : MonoBehaviour
     private void Update()
     {
         RaycastHit hit;
+        // Codigo para ver el rayo
         Ray ray = new Ray(transform.position, transform.forward);
         Debug.DrawRay(ray.origin, ray.direction * _RETICLE_MAX_DISTANCE, Color.green); //crea el rayo
 
@@ -188,7 +189,9 @@ public class CardboardLookReticlePointer : MonoBehaviour
 
             if (hitObject.CompareTag(interactableTag))
             {
+                // Codigo para ver el rayo
                 Debug.DrawRay(ray.origin, ray.direction * _RETICLE_MAX_DISTANCE, Color.red);
+                // finrayo
                 PointerOnGace(hit.point);
                 ResetParams();
             }
