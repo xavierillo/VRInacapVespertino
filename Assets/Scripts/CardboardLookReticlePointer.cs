@@ -148,7 +148,14 @@ public class CardboardLookReticlePointer : MonoBehaviour
 
         CreateMesh();
 
-        GazeManager.Instance.OnGazeSelection += GazeSelection;
+        if (GazeManager.Instance != null)
+        {
+            GazeManager.Instance.OnGazeSelection += GazeSelection;
+        }
+        else
+        {
+            Debug.LogError("GazeManager.Instance is null. Make sure GazeManager is properly initialized.");
+        }
     }
 
 
